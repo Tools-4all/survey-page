@@ -52,8 +52,7 @@
             z-index: 1;
         }
 
-        h1,
-        h2 {
+        h1, h2 {
             color: var(--primary);
         }
 
@@ -106,9 +105,7 @@
         }
 
         @keyframes blink-animation {
-            50% {
-                opacity: 0;
-            }
+            50% { opacity: 0; }
         }
 
         #questions {
@@ -144,8 +141,7 @@
             margin-top: 20px;
         }
 
-        th,
-        td {
+        th, td {
             border: 1px solid #ccc;
             padding: 8px;
         }
@@ -161,21 +157,15 @@
             color: white;
             padding: 8px 12px;
             border-radius: 6px;
-            box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 0 6px rgba(0,0,0,0.2);
             cursor: pointer;
             animation: fadein 0.5s;
             z-index: 0;
         }
 
         @keyframes fadein {
-            from {
-                opacity: 0;
-                transform: scale(0.5);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
+            from { opacity: 0; transform: scale(0.5); }
+            to { opacity: 1; transform: scale(1); }
         }
 
         .firework {
@@ -190,14 +180,8 @@
         }
 
         @keyframes explode {
-            0% {
-                transform: scale(1);
-                opacity: 1;
-            }
-            100% {
-                transform: scale(8);
-                opacity: 0;
-            }
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(8); opacity: 0; }
         }
     </style>
     <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
@@ -208,11 +192,11 @@
     <button id="admin-btn" onclick="enterAdmin()">Admin</button>
 
     <div id="app">
-        <div id="start-screen" style="margin-top: 100px; margin-bottom: 200px;">
+        <div id="start-screen" style="margin-top:100px; margin-bottom:200px;">
             <h1>בחר סקר</h1>
             <button onclick="startSurvey(0)">סקר 1 - ללא זמן</button>
-            <button onclick="startSurvey(1)">סקר 2 - 60 שניות + הסחות קלות</button>
-            <button onclick="startSurvey(2)">סקר 3 - 20 שניות + הסחות רבות</button>
+            <button onclick="startSurvey(1)">סקר 2 - 60 שניות + קל</button>
+            <button onclick="startSurvey(2)">סקר 3 - 20 שניות + רבות</button>
         </div>
 
         <div id="password-screen" class="hidden">
@@ -236,7 +220,7 @@
         <div id="survey-screen" class="hidden">
             <h2 id="user-greeting"></h2>
             <div id="timer" class="hidden"></div>
-            <img id="survey-image" src="exple.jpg" alt="תמונה לשאלון" />
+            <img id="survey-image" src="exple.jpg" alt="תמונה" />
             <div id="questions"></div>
             <button onclick="onNextClicked()">הבא</button>
         </div>
@@ -246,12 +230,10 @@
             <p id="score"></p>
         </div>
 
-        <div id="results-table" class="hidden" style="margin-top: 200px;">
+        <div id="results-table" class="hidden" style="margin-top:200px;">
             <h2>טבלת משתתפים</h2>
             <table>
-                <thead>
-                    <tr><th>שם</th><th>סקר</th><th>ציון</th></tr>
-                </thead>
+                <thead><tr><th>שם</th><th>סקר</th><th>ציון</th></tr></thead>
                 <tbody id="table-body"></tbody>
             </table>
         </div>
@@ -277,111 +259,79 @@
 
         const surveys = [
             { timeLimit: null, distractions: 0, password: "shay1", name: "ללא זמן" },
-            { timeLimit: 60, distractions: 1, password: "shay2", name: "זמן ארוך" },
-            { timeLimit: 20, distractions: 6, password: "shay3", name: "זמן קצר" }
+            { timeLimit: 60, distractions: 1, password: "shay2", name: "60s + קל" },
+            { timeLimit: 20, distractions: 6, password: "shay3", name: "20s + רבות" }
         ];
 
         const questions = [
-            { question: "איזה כלי נגינה מופיע למעלה משמאל?", options: ["גיטרה", "קלרינט", "תוף", "פסנתר"], answer: "גיטרה" },
-            { question: "באיזו חיה שנמצאת במים?", options: ["פינגווין", "דג זהב", "קרפדה", "ברווז"], answer: "פינגווין" },
-            { question: "כמה אנשים יושבים על השמיכה בפיקניק?", options: ["3", "4", "5", "6"], answer: "5" },
-            { question: "איזו חיה מופיעה בצד ימין למטה?", options: ["ג'ירפה", "אריה", "נמר", "זברה"], answer: "ג'ירפה" }
+            { q: "איזה כלי נגינה מופיע למעלה משמאל?", opts: ["גיטרה","קלרינט","תוף","פסנתר"], a:"גיטרה" },
+            { q: "באיזו חיה בים?", opts:["פינגווין","דג","קרפדה","ברווז"], a:"דג" },
+            { q: "כמה אנשים בפיקניק?", opts:["3","4","5","6"], a:"5" },
+            { q: "איזו חיה מימין למטה?", opts:["ג'ירפה","אריה","נמר","זברה"], a:"ג'ירפה" }
         ];
 
-        let selectedSurvey, userName;
-        let currentQuestionIndex, timer, timeRemaining, finish;
+        let selectedSurvey, userName, currentQuestionIndex, timer, timeRemaining, finish=false;
 
         function enterAdmin() {
-            const pwd = prompt("הכנס סיסמת מנהל:");
-            if (pwd === "shayAdmin") {
-                document.getElementById("results-table").classList.remove("hidden");
-                loadResultsTable();
-            } else {
-                alert("סיסמה שגויה!");
-            }
+            const pwd=prompt("הכנס סיסמת מנהל:");
+            if(pwd==="shayAdmin") document.getElementById("results-table").classList.remove("hidden");
+            else alert("סיסמה שגויה!");
         }
 
-        function loadResultsTable() {
-            const tbody = document.getElementById("table-body");
-            tbody.innerHTML = "";
-            db.ref("results").once("value", snap => {
-                snap.forEach(child => {
-                    const { name, surveyType, score } = child.val();
-                    const tr = document.createElement("tr");
-                    tr.innerHTML = `<td>${name}</td><td>${surveyType}</td><td>${score}</td>`;
-                    tbody.appendChild(tr);
-                });
-            });
-        }
-
-        function startSurvey(idx) {
-            selectedSurvey = surveys[idx];
+        function startSurvey(i){
+            selectedSurvey=surveys[i];
             document.getElementById("start-screen").classList.add("hidden");
             document.getElementById("password-screen").classList.remove("hidden");
         }
 
-        function verifySurveyPassword() {
-            const pwd = document.getElementById("password-input").value.trim();
-            if (pwd === selectedSurvey.password) {
+        function verifySurveyPassword(){
+            if(document.getElementById("password-input").value===selectedSurvey.password){
                 document.getElementById("password-screen").classList.add("hidden");
                 document.getElementById("name-screen").classList.remove("hidden");
-            } else {
-                alert("סיסמה שגויה!");
-            }
+            } else alert("סיסמה שגויה!");
         }
 
-        function beginSurvey() {
-            const name = document.getElementById("user-name").value.trim();
-            if (!name) return alert("אנא הזן שם");
-            userName = name;
+        function beginSurvey(){
+            const n=document.getElementById("user-name").value.trim();
+            if(!n) return alert("הזן שם");
+            userName=n;
             document.getElementById("name-screen").classList.add("hidden");
-            const instr = `זהו סקר "${selectedSurvey.name}". ` +
-                (selectedSurvey.timeLimit ? `יש לך ${selectedSurvey.timeLimit} שניות` : `אין הגבלת זמן`) +
-                `, הסחות: ${selectedSurvey.distractions === 0 ? "אין" : selectedSurvey.distractions === 1 ? "קלות" : "רבות"}.`;
-            document.getElementById("instructions-text").innerText = instr;
+            const instr=`סקר "${selectedSurvey.name}" ${selectedSurvey.timeLimit?`יש לך ${selectedSurvey.timeLimit}s`:"אין זמן"}, הסחות: ${selectedSurvey.distractions?selectedSurvey.distractions:"אין"}.`;
+            document.getElementById("instructions-text").innerText=instr;
             document.getElementById("instructions-screen").classList.remove("hidden");
         }
 
-        function showImage() {
+        function showImage(){
             document.getElementById("instructions-screen").classList.add("hidden");
             document.getElementById("survey-screen").classList.remove("hidden");
-            document.getElementById("user-greeting").innerText = `שלום, ${userName}`;
-            currentQuestionIndex = 0;
-            finish = false;
+            document.getElementById("user-greeting").innerText=`שלום, ${userName}`;
+            currentQuestionIndex=0;
             loadQuestions();
         }
 
-        function loadQuestions() {
-            const container = document.getElementById("questions");
-            container.innerHTML = "";
-            questions.forEach((q, i) => {
-                const div = document.createElement("div");
-                div.classList.add("question");
-                div.innerHTML = `<p>${i + 1}. ${q.question}</p>`;
-                const ul = document.createElement("ul");
-                ul.classList.add("options");
-                q.options.forEach(opt => {
-                    const li = document.createElement("li");
-                    li.innerHTML = `<input type="radio" name="q${i}" value="${opt}" /> ${opt}`;
-                    ul.appendChild(li);
+        function loadQuestions(){
+            const c=document.getElementById("questions");
+            c.innerHTML="";
+            questions.forEach((o,i)=>{
+                const d=document.createElement("div");
+                d.classList.add("question");
+                d.innerHTML=`<p>${i+1}. ${o.q}</p>`;
+                o.opts.forEach(opt=>{
+                    const li=document.createElement("li");
+                    li.innerHTML=`<label><input type="radio" name="q${i}" value="${opt}"/> ${opt}</label>`;
+                    d.appendChild(li);
                 });
-                div.appendChild(ul);
-                container.appendChild(div);
+                c.appendChild(d);
             });
         }
 
-        function onNextClicked() {
-            if (currentQuestionIndex === 0) {
+        function onNextClicked(){
+            if(currentQuestionIndex===0){
                 document.getElementById("survey-image").classList.add("hidden");
-                if (selectedSurvey.timeLimit) startTimer();
-                if (selectedSurvey.distractions > 0) {
-                    let spawnCount;
-                    if (selectedSurvey.timeLimit === 60) {
-                        spawnCount = 20;
-                    } else {
-                        spawnCount = 40;
-                        scheduleFireworks(10);
-                    }
+                if(selectedSurvey.timeLimit) startTimer();
+                if(selectedSurvey.distractions>0){
+                    let spawnCount=selectedSurvey.timeLimit===60?20:40;
+                    if(selectedSurvey.timeLimit===20) scheduleFireworks(10);
                     scheduleDistractions(spawnCount);
                     scheduleColorFlashesParallel(selectedSurvey.distractions);
                 }
@@ -389,139 +339,113 @@
             showNextQuestion();
         }
 
-        function showNextQuestion() {
-            const elems = document.querySelectorAll(".question");
-            elems.forEach(el => el.classList.remove("active"));
-            if (currentQuestionIndex < elems.length) {
-                elems[currentQuestionIndex].classList.add("active");
+        function showNextQuestion(){
+            const qs=document.querySelectorAll(".question");
+            qs.forEach(el=>el.classList.remove("active"));
+            if(currentQuestionIndex<qs.length){
+                qs[currentQuestionIndex].classList.add("active");
                 currentQuestionIndex++;
-            } else {
-                submitAnswers();
-            }
+            } else submitAnswers();
         }
 
-        function startTimer() {
-            const box = document.getElementById("timer");
-            box.classList.remove("hidden");
-            timeRemaining = selectedSurvey.timeLimit;
-            updateTimerDisplay();
-            timer = setInterval(() => {
+        function startTimer(){
+            const b=document.getElementById("timer");
+            b.classList.remove("hidden");
+            timeRemaining=selectedSurvey.timeLimit;
+            timer=setInterval(()=>{
                 timeRemaining--;
-                updateTimerDisplay();
-                if (timeRemaining <= 0 && !finish) {
-                    clearInterval(timer);
-                    submitAnswers();
-                }
-            }, 1000);
+                b.innerText=`זמן: ${timeRemaining}s`;
+                if(timeRemaining<=5) b.classList.add("blink");
+                if(timeRemaining<=0){clearInterval(timer); submitAnswers();}
+            },1000);
         }
 
-        function updateTimerDisplay() {
-            const box = document.getElementById("timer");
-            box.innerText = `זמן נותר: ${timeRemaining} שניות`;
-            box.classList.toggle("blink", timeRemaining <= 5);
-        }
-
-        function submitAnswers() {
-            finish = true;
+        function submitAnswers(){
+            finish=true;
             clearInterval(timer);
             removeAllDistractions();
             clearColorFlashes();
             clearFireworks();
-            let correct = 0;
-            questions.forEach((q, i) => {
-                const sel = document.querySelector(`input[name="q${i}"]:checked`);
-                if (sel && sel.value === q.answer) correct++;
+            let correct=0;
+            questions.forEach((o,i)=>{
+                const v=document.querySelector(`input[name="q${i}"]:checked`);
+                if(v&&v.value===o.a) correct++;
             });
-            saveResult(userName, selectedSurvey.name, correct);
             document.getElementById("survey-screen").classList.add("hidden");
             document.getElementById("result-screen").classList.remove("hidden");
-            document.getElementById("score").innerText = `${userName}, ענית נכון על ${correct} מתוך ${questions.length} שאלות.`;
+            document.getElementById("score").innerText=`${userName}, ענית ${correct}/${questions.length}`;
+            saveResult(userName, selectedSurvey.name, correct);
         }
 
-        function saveResult(name, surveyType, score) {
-            db.ref("results").push().set({ name, surveyType, score, timestamp: Date.now() });
+        function saveResult(n,t,s){
+            db.ref("results").push().set({name:n,surveyType:t,score:s,timestamp:Date.now()});
         }
 
-        function scheduleDistractions(count) {
-            const appRect = document.getElementById("app").getBoundingClientRect();
-            const total = (selectedSurvey.timeLimit || 60) * 1000;
-            const margin = 10;
-            for (let i = 0; i < count; i++) {
-                const delay = Math.random() * total;
-                distractionTimers.push(setTimeout(() => {
-                    let x, y;
-                    const side = Math.floor(Math.random() * 3);
-                    switch (side) {
-                        case 0:
-                            x = appRect.right + margin;
-                            y = appRect.top + Math.random() * appRect.height;
-                            break;
-                        case 1:
-                            x = appRect.left - margin - 80;
-                            y = appRect.top + Math.random() * appRect.height;
-                            break;
-                        case 2:
-                            x = appRect.left + Math.random() * appRect.width;
-                            y = appRect.bottom + margin;
-                            break;
-                    }
-                    createDistraction(x, y);
-                }, delay));
+        function scheduleDistractions(count){
+            const rect=document.getElementById("app").getBoundingClientRect(), total=(selectedSurvey.timeLimit||60)*1000, m=10;
+            for(let i=0;i<count;i++){
+                const delay=Math.random()*total;
+                distractionTimers.push(setTimeout(()=>{
+                    let x,y,side=Math.floor(Math.random()*3);
+                    if(side===0){x=rect.right+m; y=rect.top+Math.random()*rect.height;}
+                    if(side===1){x=rect.left-m-80; y=rect.top+Math.random()*rect.height;}
+                    if(side===2){x=rect.left+Math.random()*rect.width; y=rect.bottom+m;}
+                    createDistraction(x,y);
+                },delay));
             }
         }
 
-        function createDistraction(x, y) {
-            const d = document.createElement("div");
+        function createDistraction(x,y){
+            const d=document.createElement("div");
             d.classList.add("distraction");
-            d.innerText = "!!!!!!!";
-            d.style.left = `${x}px`;
-            d.style.top = `${y}px`;
-            d.onclick = () => d.remove();
+            d.innerText="!!!!!!!";
+            d.style.left=`${x}px`; d.style.top=`${y}px`;
             document.body.appendChild(d);
-            setTimeout(() => d.remove(), 5000);
+            setTimeout(()=>d.remove(),5000);
         }
 
-        function scheduleFireworks(count) {
-            const total = (selectedSurvey.timeLimit || 20) * 1000;
-            for (let i = 0; i < count; i++) {
-                const delay = Math.random() * total;
-                const t = setTimeout(() => {
-                    const fw = document.createElement("div");
+        function scheduleFireworks(count){
+            const total=(selectedSurvey.timeLimit||20)*1000;
+            for(let i=0;i<count;i++){
+                const t=setTimeout(()=>{
+                    const fw=document.createElement("div");
                     fw.classList.add("firework");
-                    fw.style.left = Math.random() * window.innerWidth + "px";
-                    fw.style.top = Math.random() * window.innerHeight + "px";
+                    fw.style.left=Math.random()*window.innerWidth+"px";
+                    fw.style.top=Math.random()*window.innerHeight+"px";
                     document.body.appendChild(fw);
-                    setTimeout(() => fw.remove(), 1000);
-                }, delay);
+                    setTimeout(()=>fw.remove(),1000);
+                },Math.random()*total);
                 fireworkTimers.push(t);
             }
         }
 
-        function clearFireworks() {
-            fireworkTimers.forEach(t => clearTimeout(t));
-            fireworkTimers = [];
+        function clearFireworks(){
+            fireworkTimers.forEach(t=>clearTimeout(t));
+            fireworkTimers=[];
         }
 
-        function scheduleColorFlashesParallel(count) {
-            if (count === 0) return;
-            const app = document.getElementById("app");
-            const totalTime = (selectedSurvey.timeLimit || 60) * 1000;
-            const interval = totalTime / (count * 10);
-            const runs = Math.ceil(totalTime / interval);
-            for (let i = 0; i < runs; i++) {
-                colorTimers.push(setTimeout(() => {
-                    app.style.backgroundColor = `hsl(${Math.random() * 360},70%,80%)`;
-                }, i * interval));
-                colorTimers.push(setTimeout(() => {
-                    app.style.backgroundColor = 'white';
-                }, i * interval + interval / 2));
+        function scheduleColorFlashesParallel(count){
+            if(!count) return;
+            const app=document.getElementById("app");
+            const total=(selectedSurvey.timeLimit||60)*1000;
+            const interval=total/(count*10);
+            const runs=Math.ceil(total/interval);
+            for(let i=0;i<runs;i++){
+                colorTimers.push(setTimeout(()=>app.style.backgroundColor=`hsl(${Math.random()*360},70%,80%)`,i*interval));
+                colorTimers.push(setTimeout(()=>app.style.backgroundColor='white',i*interval+interval/2));
             }
         }
 
-        function clearColorFlashes() {
-            colorTimers.forEach(t => clearTimeout(t));
-            colorTimers = [];
-            document.getElementById("app").style.backgroundColor = 'white';
+        function clearColorFlashes(){
+            colorTimers.forEach(t=>clearTimeout(t));
+            colorTimers=[];
+            document.getElementById("app").style.backgroundColor='white';
+        }
+
+        function removeAllDistractions(){
+            distractionTimers.forEach(t=>clearTimeout(t));
+            distractionTimers=[];
+            document.querySelectorAll(".distraction").forEach(el=>el.remove());
         }
     </script>
 </body>
