@@ -179,6 +179,29 @@
                 transform: scale(1);
             }
         }
+
+        .firework {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: radial-gradient(circle, yellow 0%, orange 50%, red 80%, transparent 90%);
+            border-radius: 50%;
+            animation: explode 1s ease-out forwards;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        @keyframes explode {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(8);
+                opacity: 0;
+            }
+        }
     </style>
     <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
@@ -352,12 +375,21 @@
                 document.getElementById("survey-image").classList.add("hidden");
                 if (selectedSurvey.timeLimit) startTimer();
                 if (selectedSurvey.distractions > 0) {
-                    scheduleDistractions(selectedSurvey.distractions);
+                    let spawnCount;
+                    if (selectedSurvey.timeLimit === 60) {
+                        spawnCount = 20;
+                    } else {
+                        spawnCount = 40;
+                        scheduleFireworks(10);
+                    }
+                    scheduleDistractions(spawnCount);
                     scheduleColorFlashesParallel(selectedSurvey.distractions);
                 }
             }
             showNextQuestion();
         }
+
+
 
         function showNextQuestion() {
             const elems = document.querySelectorAll(".question");
@@ -385,6 +417,7 @@
         function submitAnswers() {
             finish = true; clearInterval(timer);
             removeAllDistractions(); clearColorFlashes();
+            clearFireworks();
             let correct = 0;
             questions.forEach((q, i) => {
                 const sel = document.querySelector(`input[name="q${i}"]:checked`);
@@ -400,31 +433,68 @@
             db.ref("results").push().set({ name, surveyType, score, timestamp: Date.now() });
         }
 
+
         function scheduleDistractions(count) {
             const appRect = document.getElementById("app").getBoundingClientRect();
-            const total = selectedSurvey.timeLimit || 60;
+            const total = (selectedSurvey.timeLimit || 60) * 1000;
+            const margin = 10;
             for (let i = 0; i < count; i++) {
-                const delay = Math.random() * total * 1000 * 0.8 + 1000;
+                const delay = Math.random() * total;
                 distractionTimers.push(setTimeout(() => {
                     let x, y;
-                    do {
-                        x = Math.random() * (window.innerWidth - 100);
-                        y = Math.random() * (window.innerHeight - 50);
-                    } while (x > appRect.left && x < appRect.right && y > appRect.top && y < appRect.bottom);
+                    const side = Math.floor(Math.random() * 3);
+                    switch (side) {
+                        case 0:
+                            x = appRect.right + margin;
+                            y = appRect.top + Math.random() * appRect.height;
+                            break;
+                        case 1:
+                            x = appRect.left - margin - 80;
+                            y = appRect.top + Math.random() * appRect.height;
+                            break;
+                        case 2:
+                            x = appRect.left + Math.random() * appRect.width;
+                            y = appRect.bottom + margin;
+                            break;
+                    }
                     createDistraction(x, y);
                 }, delay));
             }
         }
 
+
+        function scheduleFireworks(count) {
+            const total = (selectedSurvey.timeLimit || 20) * 1000;
+            for (let i = 0; i < count; i++) {
+                const delay = Math.random() * total;
+                const t = setTimeout(() => {
+                    const fw = document.createElement("div");
+                    fw.classList.add("firework");
+                    fw.style.left = Math.random() * window.innerWidth + "px";
+                    fw.style.top = Math.random() * window.innerHeight + "px";
+                    document.body.appendChild(fw);
+                    setTimeout(() => fw.remove(), 1000);
+                }, delay);
+                fireworkTimers.push(t);
+            }
+        }
+
+        function clearFireworks() {
+            fireworkTimers.forEach(t => clearTimeout(t));
+            fireworkTimers = [];
+        }
+
         function createDistraction(x, y) {
             const d = document.createElement("div");
+            d.style.backgroundColor = 'red';
             d.classList.add("distraction");
-            d.innerText = "הסחת דעת!";
+            d.innerText = "!!!!!!!";
             d.style.left = `${x}px`; d.style.top = `${y}px`;
             d.onclick = () => d.remove();
             document.body.appendChild(d);
             setTimeout(() => d.remove(), 5000);
         }
+
 
         function removeAllDistractions() {
             distractionTimers.forEach(t => clearTimeout(t)); distractionTimers = [];
@@ -434,14 +504,21 @@
         function scheduleColorFlashesParallel(count) {
             if (count === 0) return;
             const app = document.getElementById("app");
-            const baseInterval = 1000;
-            const interval = baseInterval * count;
-            const totalRuns = Math.ceil((selectedSurvey.timeLimit || 60) * 1000 / interval);
-            for (let i = 0; i < totalRuns; i++) {
-                colorTimers.push(setTimeout(() => app.style.backgroundColor = `hsl(${Math.random() * 360},70%,80%)`, i * interval));
-                colorTimers.push(setTimeout(() => app.style.backgroundColor = 'white', i * interval + interval / 2));
+            // משך כולל של הסקר במיליסקונד (ברירת מחדל 60s אם אין הגבלת זמן)
+            const totalTime = (selectedSurvey.timeLimit || 60) * 1000;
+            // קצב: פחות count -> מרווח גדול (איטי), יותר count -> מרווח קטן (מהיר)
+            const interval = totalTime / (count * 10);
+            const runs = Math.ceil(totalTime / interval);
+            for (let i = 0; i < runs; i++) {
+                colorTimers.push(setTimeout(() => {
+                    app.style.backgroundColor = `hsl(${Math.random() * 360},70%,80%)`;
+                }, i * interval));
+                colorTimers.push(setTimeout(() => {
+                    app.style.backgroundColor = 'white';
+                }, i * interval + interval / 2));
             }
         }
+
 
         function clearColorFlashes() {
             colorTimers.forEach(t => clearTimeout(t)); colorTimers = [];
