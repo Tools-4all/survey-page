@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>סקר</title>
     <style>
+        html {
+            height: 100%;
+        }
+
         :root {
             --primary: #4a90e2;
             --background: #f4f7fa;
@@ -34,6 +38,7 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            z-index: 9999;
         }
 
         #admin-btn:hover {
@@ -49,7 +54,7 @@
             box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
             transition: background-color 0.5s;
             position: relative;
-            z-index: 1;
+            z-index: 999;
         }
 
         h1,
@@ -156,7 +161,7 @@
         }
 
         .distraction {
-            position: absolute;
+            position: fixed;
             background-color: red;
             color: white;
             padding: 8px 12px;
@@ -164,7 +169,7 @@
             box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
             cursor: pointer;
             animation: fadein 0.5s;
-            z-index: 0;
+            z-index: 100;
         }
 
         @keyframes fadein {
@@ -172,6 +177,7 @@
                 opacity: 0;
                 transform: scale(0.5);
             }
+
             to {
                 opacity: 1;
                 transform: scale(1);
@@ -194,6 +200,7 @@
                 transform: scale(1);
                 opacity: 1;
             }
+
             100% {
                 transform: scale(8);
                 opacity: 0;
@@ -250,7 +257,11 @@
             <h2>טבלת משתתפים</h2>
             <table>
                 <thead>
-                    <tr><th>שם</th><th>סקר</th><th>ציון</th></tr>
+                    <tr>
+                        <th>שם</th>
+                        <th>סקר</th>
+                        <th>ציון</th>
+                    </tr>
                 </thead>
                 <tbody id="table-body"></tbody>
             </table>
@@ -523,6 +534,13 @@
             colorTimers = [];
             document.getElementById("app").style.backgroundColor = 'white';
         }
+
+        function removeAllDistractions() {
+            distractionTimers.forEach(t => clearTimeout(t));
+            distractionTimers = [];
+            document.querySelectorAll(".distraction").forEach(el => el.remove());
+        }
+
     </script>
 </body>
 
