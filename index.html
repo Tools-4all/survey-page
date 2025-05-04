@@ -155,10 +155,9 @@
             color: white;
         }
 
-        /* הסחות דעת מחוץ ל-#app */
         .distraction {
             position: absolute;
-            background-color: var(--accent);
+            background-color: red;
             color: white;
             padding: 8px 12px;
             border-radius: 6px;
@@ -173,7 +172,6 @@
                 opacity: 0;
                 transform: scale(0.5);
             }
-
             to {
                 opacity: 1;
                 transform: scale(1);
@@ -196,7 +194,6 @@
                 transform: scale(1);
                 opacity: 1;
             }
-
             100% {
                 transform: scale(8);
                 opacity: 0;
@@ -253,11 +250,7 @@
             <h2>טבלת משתתפים</h2>
             <table>
                 <thead>
-                    <tr>
-                        <th>שם</th>
-                        <th>סקר</th>
-                        <th>ציון</th>
-                    </tr>
+                    <tr><th>שם</th><th>סקר</th><th>ציון</th></tr>
                 </thead>
                 <tbody id="table-body"></tbody>
             </table>
@@ -265,7 +258,10 @@
     </div>
 
     <script>
-        // Firebase config
+        let fireworkTimers = [];
+        let distractionTimers = [];
+        let colorTimers = [];
+
         const firebaseConfig = {
             apiKey: "AIzaSyCcKh69vdKosOaMR8D_6cLmRerjXBA4_ug",
             authDomain: "shay-d0765.firebaseapp.com",
@@ -279,7 +275,6 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // סקרים
         const surveys = [
             { timeLimit: null, distractions: 0, password: "shay1", name: "ללא זמן" },
             { timeLimit: 60, distractions: 1, password: "shay2", name: "זמן ארוך" },
@@ -293,14 +288,12 @@
             { question: "איזו חיה מופיעה בצד ימין למטה?", options: ["ג'ירפה", "אריה", "נמר", "זברה"], answer: "ג'ירפה" }
         ];
 
-        const ADMIN_PASSWORD = "shayAdmin";
         let selectedSurvey, userName;
         let currentQuestionIndex, timer, timeRemaining, finish;
-        let distractionTimers = [], colorTimers = [];
 
         function enterAdmin() {
             const pwd = prompt("הכנס סיסמת מנהל:");
-            if (pwd === ADMIN_PASSWORD) {
+            if (pwd === "shayAdmin") {
                 document.getElementById("results-table").classList.remove("hidden");
                 loadResultsTable();
             } else {
@@ -343,8 +336,8 @@
             userName = name;
             document.getElementById("name-screen").classList.add("hidden");
             const instr = `זהו סקר "${selectedSurvey.name}". ` +
-                (selectedSurvey.timeLimit ? `יש לך ${selectedSurvey.timeLimit} שניות לענות על 4 שאלות` : `אין הגבלת זמן`) +
-                `, והסחות דעת: ${selectedSurvey.distractions === 0 ? "אין" : selectedSurvey.distractions === 1 ? "קלות" : "רבות"}.`;
+                (selectedSurvey.timeLimit ? `יש לך ${selectedSurvey.timeLimit} שניות` : `אין הגבלת זמן`) +
+                `, הסחות: ${selectedSurvey.distractions === 0 ? "אין" : selectedSurvey.distractions === 1 ? "קלות" : "רבות"}.`;
             document.getElementById("instructions-text").innerText = instr;
             document.getElementById("instructions-screen").classList.remove("hidden");
         }
@@ -353,7 +346,8 @@
             document.getElementById("instructions-screen").classList.add("hidden");
             document.getElementById("survey-screen").classList.remove("hidden");
             document.getElementById("user-greeting").innerText = `שלום, ${userName}`;
-            currentQuestionIndex = 0; finish = false;
+            currentQuestionIndex = 0;
+            finish = false;
             loadQuestions();
         }
 
@@ -364,9 +358,15 @@
                 const div = document.createElement("div");
                 div.classList.add("question");
                 div.innerHTML = `<p>${i + 1}. ${q.question}</p>`;
-                const ul = document.createElement("ul"); ul.classList.add("options");
-                q.options.forEach(opt => { const li = document.createElement("li"); li.innerHTML = `<input type="radio" name="q${i}" value="${opt}" /> ${opt}`; ul.appendChild(li); });
-                div.appendChild(ul); container.appendChild(div);
+                const ul = document.createElement("ul");
+                ul.classList.add("options");
+                q.options.forEach(opt => {
+                    const li = document.createElement("li");
+                    li.innerHTML = `<input type="radio" name="q${i}" value="${opt}" /> ${opt}`;
+                    ul.appendChild(li);
+                });
+                div.appendChild(ul);
+                container.appendChild(div);
             });
         }
 
@@ -389,22 +389,29 @@
             showNextQuestion();
         }
 
-
-
         function showNextQuestion() {
             const elems = document.querySelectorAll(".question");
             elems.forEach(el => el.classList.remove("active"));
-            if (currentQuestionIndex < elems.length) { elems[currentQuestionIndex].classList.add("active"); currentQuestionIndex++; }
-            else submitAnswers();
+            if (currentQuestionIndex < elems.length) {
+                elems[currentQuestionIndex].classList.add("active");
+                currentQuestionIndex++;
+            } else {
+                submitAnswers();
+            }
         }
 
         function startTimer() {
             const box = document.getElementById("timer");
             box.classList.remove("hidden");
-            timeRemaining = selectedSurvey.timeLimit; updateTimerDisplay();
+            timeRemaining = selectedSurvey.timeLimit;
+            updateTimerDisplay();
             timer = setInterval(() => {
-                timeRemaining--; updateTimerDisplay();
-                if (timeRemaining <= 0 && !finish) { clearInterval(timer); submitAnswers(); }
+                timeRemaining--;
+                updateTimerDisplay();
+                if (timeRemaining <= 0 && !finish) {
+                    clearInterval(timer);
+                    submitAnswers();
+                }
             }, 1000);
         }
 
@@ -415,8 +422,10 @@
         }
 
         function submitAnswers() {
-            finish = true; clearInterval(timer);
-            removeAllDistractions(); clearColorFlashes();
+            finish = true;
+            clearInterval(timer);
+            removeAllDistractions();
+            clearColorFlashes();
             clearFireworks();
             let correct = 0;
             questions.forEach((q, i) => {
@@ -432,7 +441,6 @@
         function saveResult(name, surveyType, score) {
             db.ref("results").push().set({ name, surveyType, score, timestamp: Date.now() });
         }
-
 
         function scheduleDistractions(count) {
             const appRect = document.getElementById("app").getBoundingClientRect();
@@ -462,6 +470,16 @@
             }
         }
 
+        function createDistraction(x, y) {
+            const d = document.createElement("div");
+            d.classList.add("distraction");
+            d.innerText = "!!!!!!!";
+            d.style.left = `${x}px`;
+            d.style.top = `${y}px`;
+            d.onclick = () => d.remove();
+            document.body.appendChild(d);
+            setTimeout(() => d.remove(), 5000);
+        }
 
         function scheduleFireworks(count) {
             const total = (selectedSurvey.timeLimit || 20) * 1000;
@@ -484,29 +502,10 @@
             fireworkTimers = [];
         }
 
-        function createDistraction(x, y) {
-            const d = document.createElement("div");
-            d.style.backgroundColor = 'red';
-            d.classList.add("distraction");
-            d.innerText = "!!!!!!!";
-            d.style.left = `${x}px`; d.style.top = `${y}px`;
-            d.onclick = () => d.remove();
-            document.body.appendChild(d);
-            setTimeout(() => d.remove(), 5000);
-        }
-
-
-        function removeAllDistractions() {
-            distractionTimers.forEach(t => clearTimeout(t)); distractionTimers = [];
-            document.querySelectorAll(".distraction").forEach(el => el.remove());
-        }
-
         function scheduleColorFlashesParallel(count) {
             if (count === 0) return;
             const app = document.getElementById("app");
-            // משך כולל של הסקר במיליסקונד (ברירת מחדל 60s אם אין הגבלת זמן)
             const totalTime = (selectedSurvey.timeLimit || 60) * 1000;
-            // קצב: פחות count -> מרווח גדול (איטי), יותר count -> מרווח קטן (מהיר)
             const interval = totalTime / (count * 10);
             const runs = Math.ceil(totalTime / interval);
             for (let i = 0; i < runs; i++) {
@@ -519,9 +518,9 @@
             }
         }
 
-
         function clearColorFlashes() {
-            colorTimers.forEach(t => clearTimeout(t)); colorTimers = [];
+            colorTimers.forEach(t => clearTimeout(t));
+            colorTimers = [];
             document.getElementById("app").style.backgroundColor = 'white';
         }
     </script>
