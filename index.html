@@ -94,7 +94,7 @@
 
         #survey-image {
             width: 100%;
-            max-width: 400px;
+            max-width: 600px;
             height: auto;
             margin: 20px auto;
             border-radius: 10px;
@@ -305,12 +305,30 @@
             { timeLimit: 20, distractions: 6, password: "333", name: "זמן קצר" }
         ];
 
+        // מערך של 4 שאלות מותאם לתמונה:
         const questions = [
-            { question: "איזה כלי נגינה מופיע למעלה משמאל?", options: ["גיטרה", "קלרינט", "תוף", "פסנתר"], answer: "גיטרה" },
-            { question: "באיזו חיה שנמצאת במים?", options: ["פינגווין", "דג זהב", "קרפדה", "ברווז"], answer: "פינגווין" },
-            { question: "כמה אנשים יושבים על השמיכה בפיקניק?", options: ["3", "4", "5", "6"], answer: "5" },
-            { question: "איזו חיה מופיעה בצד ימין למטה?", options: ["ג'ירפה", "אריה", "נמר", "זברה"], answer: "ג'ירפה" }
+            {
+                question: "איזו חיה עומדת ליד הזוג המגיש אוכל בצד ימין?",
+                options: ["ג'ירפה", "פיל", "זברה", "אריה"],
+                answer: "ג'ירפה"
+            },
+            {
+                question: "מה צף במים בצבע לבן-שקוף ליד הפינגווין?",
+                options: ["קוביית קרח", "בלון", "פלסטלינה", "קוביית עץ"],
+                answer: "קוביית קרח"
+            },
+            {
+                question: "כמה ילדים יושבים על השמיכה בתחתית התמונה?",
+                options: ["2", "3", "4", "5"],
+                answer: "3"
+            },
+            {
+                question: "איזה עוף מסתובב על הדשא בצד שמאל של הבריכה?",
+                options: ["תרנגולת", "ברווז", "יונה", "ברווזי עץ"],
+                answer: "תרנגולת"
+            }
         ];
+
 
         let selectedSurvey, userName;
         let currentQuestionIndex, timer, timeRemaining, finish;
