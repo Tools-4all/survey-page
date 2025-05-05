@@ -267,6 +267,7 @@
             </table>
         </div>
     </div>
+    <div id="distractionsDiv"></div>
 
     <script>
         let fireworkTimers = [];
@@ -287,9 +288,9 @@
         const db = firebase.database();
 
         const surveys = [
-            { timeLimit: null, distractions: 0, password: "shay1", name: "ללא זמן" },
-            { timeLimit: 60, distractions: 1, password: "shay2", name: "זמן ארוך" },
-            { timeLimit: 20, distractions: 6, password: "shay3", name: "זמן קצר" }
+            { timeLimit: null, distractions: 0, password: "1", name: "ללא זמן" },
+            { timeLimit: 60, distractions: 1, password: "22", name: "זמן ארוך" },
+            { timeLimit: 20, distractions: 6, password: "333", name: "זמן קצר" }
         ];
 
         const questions = [
@@ -343,20 +344,35 @@
 
         function beginSurvey() {
             const name = document.getElementById("user-name").value.trim();
-            if (!name) return alert("אנא הזן שם");
+            if (!name) {
+                alert("אנא הזן את שמך כדי להתחיל את הסקר");
+                return;
+            }
             userName = name;
             document.getElementById("name-screen").classList.add("hidden");
-            const instr = `זהו סקר "${selectedSurvey.name}". ` +
-                (selectedSurvey.timeLimit ? `יש לך ${selectedSurvey.timeLimit} שניות` : `אין הגבלת זמן`) +
-                `, הסחות: ${selectedSurvey.distractions === 0 ? "אין" : selectedSurvey.distractions === 1 ? "קלות" : "רבות"}.`;
+
+            // הוספת ברכת שלום עם השם בכותרת ההוראות
+            document.querySelector('#instructions-screen h2').innerText = `שלום, ${userName}`;
+
+            const instr = `
+בסקר “${selectedSurvey.name}” תראה לאחר לחיצה על "הבא" בחלון זה תמונה – יש לזכור היטב את הפריטים שבה.
+לאחר מכן, בחלון השאלון, ענה על השאלות על בסיס מה שזכרת מהתמונה.
+בסקר זה יש ${selectedSurvey.distractions === 0 ? "אין הסחות דעת" :
+                    selectedSurvey.distractions === 1 ? "הסחות דעת קלות" : "הסחות דעת רבות"}
+ו${selectedSurvey.timeLimit ? `זמן מוגבל של ${selectedSurvey.timeLimit} שניות` : "אין הגבלת זמן"}.
+לחיצה על "הבא" בחלון התמונה תפעיל את הטיימר – יש להשלים את כל השאלות לפני תום הזמן.
+בסיום תוצג תוצאה עם מספר התשובות הנכונות, ולאחר מכן תוכל לסגור את הדף.
+`.trim();
+
             document.getElementById("instructions-text").innerText = instr;
             document.getElementById("instructions-screen").classList.remove("hidden");
         }
 
+
+
         function showImage() {
             document.getElementById("instructions-screen").classList.add("hidden");
             document.getElementById("survey-screen").classList.remove("hidden");
-            document.getElementById("user-greeting").innerText = `שלום, ${userName}`;
             currentQuestionIndex = 0;
             finish = false;
             loadQuestions();
@@ -453,44 +469,54 @@
             db.ref("results").push().set({ name, surveyType, score, timestamp: Date.now() });
         }
 
+
         function scheduleDistractions(count) {
+            const container = document.getElementById("distractionsDiv");
             const appRect = document.getElementById("app").getBoundingClientRect();
-            const total = (selectedSurvey.timeLimit || 60) * 1000;
-            const margin = 10;
+            const totalTime = (selectedSurvey.timeLimit || 60) * 1000;
+
+            container.style.position = "absolute";
+            container.style.top = `${appRect.bottom}px`;
+            container.style.left = "0";
+            container.style.width = "100%";
+            container.style.height = `${window.innerHeight - appRect.bottom}px`;
+            container.style.overflow = "hidden";
+
             for (let i = 0; i < count; i++) {
-                const delay = Math.random() * total;
+                const delay = Math.random() * totalTime;
                 distractionTimers.push(setTimeout(() => {
-                    let x, y;
-                    const side = Math.floor(Math.random() * 3);
-                    switch (side) {
-                        case 0:
-                            x = appRect.right + margin;
-                            y = appRect.top + Math.random() * appRect.height;
-                            break;
-                        case 1:
-                            x = appRect.left - margin - 80;
-                            y = appRect.top + Math.random() * appRect.height;
-                            break;
-                        case 2:
-                            x = appRect.left + Math.random() * appRect.width;
-                            y = appRect.bottom + margin;
-                            break;
-                    }
+                    // קואורדינטות אקראיות בתוך גבולות ה־container
+                    const x = Math.random() * (container.clientWidth - 50);
+                    const y = Math.random() * (container.clientHeight - 20);
                     createDistraction(x, y);
                 }, delay));
             }
         }
 
-        function createDistraction(x, y) {
+        function createDistraction(xOffset, yOffset) {
+            const container = document.getElementById("distractionsDiv");
+            // ודא שהקונטיינר מוגדר position: relative
+            if (getComputedStyle(container).position === 'static') {
+                container.style.position = 'relative';
+            }
+
             const d = document.createElement("div");
             d.classList.add("distraction");
             d.innerText = "!!!!!!!";
-            d.style.left = `${x}px`;
-            d.style.top = `${y}px`;
+
+            // מיקום יחסי בתוך הקונטיינר התחתון
+            d.style.position = 'absolute';
+            d.style.left = `${xOffset}px`;
+            d.style.top = `${yOffset}px`;
+
             d.onclick = () => d.remove();
-            document.body.appendChild(d);
+            container.appendChild(d);
+
+            // הסרה אוטומטית אחרי 5 שניות
             setTimeout(() => d.remove(), 5000);
         }
+
+
 
         function scheduleFireworks(count) {
             const total = (selectedSurvey.timeLimit || 20) * 1000;
